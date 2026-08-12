@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+.claude/
+
+# ไฟล์ข้อมูลจริงของพนักงาน (ชื่อ + ข้อมูล observation) — เป็น source code repo
+# ไม่ใช่ที่เก็บข้อมูลบุคคล ไม่ควร push ขึ้น GitHub
+*.xls
+*.xlsx

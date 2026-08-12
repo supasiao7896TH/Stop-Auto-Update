@@ -1,0 +1,71 @@
+# CLAUDE.md — Stop Auto-Update
+
+## รันโปรเจกต์
+
+Multi-file ES Modules **ไม่มี build step** — ห้ามเพิ่ม Vite/Webpack/bundler ใดๆ (ขัดกับมาตรฐาน Vibe Coding ของพี่ A ที่ห้าม build tools เพื่อไม่ให้ workflow เครื่องบ้าน/ที่ทำงานพัง)
+
+รันด้วย VS Code "Open with Live Server" หรือ `npx serve .` — ต้องผ่าน local server เสมอ (ES module `import` โดน CORS บล็อกถ้าเปิดแบบ `file://`)
+
+## สถาปัตยกรรม
+
+```
+index.html              ← markup, Tailwind/Lucide/Fonts CDN, modal skeletons ทั้งหมดอยู่ที่นี่
+src/
+  main.js                ← entry, boot AppCore ตอน DOMContentLoaded
+  style.css               ← custom CSS เล็กน้อย (Tailwind CDN จัดการส่วนใหญ่)
+  modules/
+    utils.js              ← escHtml(), fullName(), uid()
+    app-config.js          ← DB name/version, month names, Gemini model/CDN URLs
+    debug.js                ← DebugModule.log/getLog
+    state-store.js           ← StateStore: get/set/on/off/optimisticUpdate (reactive)
+    storage-engine.js         ← IndexedDB CRUD + parseXlsFile() (SheetJS lazy-load)
+    gemini-ai-bridge.js        ← AES-GCM key vault + Vision OCR + tally + fuzzy match
+    ui-renderer.js               ← DOM rendering (ไม่มี business logic)
+    app-core.js                  ← orchestration, event binding, ทุก handler
+```
+
+โมดูลแต่ละไฟล์ export ตัวแปรเดียวเป็น IIFE-object (`export const ModuleName = (() => {...})();`) ตาม 9-module pattern ของ `vibe-coding-core` — ห้ามมี global function หลุดออกมานอก module
+
+## Data model (IndexedDB `stop_auto_update_db` v1)
+
+```
+sections:     { id, name, order }
+employees:    { id, no, firstName, lastName, sectionId }
+taskEntries:  { id (autoIncrement), employeeId, year, month, count }
+              unique index: by_emp_year_month = [employeeId, year, month]
+settings:     { key: 'geminiApiKeyEnc', value: { iv, ciphertext } }  (base64)
+cryptoKeys:   { name: 'geminiKeyWrap', key }   ← non-extractable AES-GCM CryptoKey
+```
+
+การเพิ่ม/แก้ taskEntries **ต้องผ่าน** `_upsertTaskEntry()` ใน app-core.js เท่านั้น (หา entry เดิมด้วย employeeId+year+month แล้ว update-in-place หรือสร้างใหม่) — ห้าม `put` เข้า taskEntries ตรงๆ จากที่อื่น เพราะจะข้าม dedup logic นี้ไป
+
+## OCR import — จุดที่ต้องเข้าใจก่อนแก้
+
+ภาพต้นทาง (screenshot รายงาน Lotus Notes) **ไม่มีคอลัมน์ตัวเลขจำนวนงาน** — แต่ละแถวคือ 1 observation record ของคนคนหนึ่ง ต้องนับจำนวนแถวที่ชื่อซ้ำกันเอง
+
+จึงออกแบบให้ Gemini ทำหน้าที่แค่ "อ่านรายชื่อทีละแถว" (`GeminiAiBridge.extractObservationRows`) ไม่ใช่ "นับเลขให้" — เพราะ LLM นับแถวจำนวนมากมักพลาด แล้วให้ `GeminiAiBridge.tallyObservations()` นับความถี่ด้วย JS ล้วนฝั่ง client แทน ถ้าจะแก้ prompt หรือ flow นี้ ต้องคงหลักการนี้ไว้
+
+รองรับวางหลายภาพต่อ 1 รอบนำเข้า (เพราะรายชื่อยาวเกิน 1 หน้าจอ) และกันแถวซ้ำข้ามภาพด้วย `rowKey` (Date+Title) ก่อนนับ — ถ้าผู้ใช้แปะภาพซ้อนทับกัน (scroll เหลื่อม) จะไม่นับซ้ำ
+
+ผลลัพธ์ OCR ที่ได้คือ**ยอดรวมสุดท้ายของเดือนนั้น** (ไม่ใช่ยอดเพิ่ม) — ตอน "บันทึกทั้งหมด" จะ**overwrite** ค่าเดิมของเดือนนั้น ไม่ใช่บวกเพิ่ม (ผ่าน `_upsertTaskEntry`)
+
+## Excel import (.xls seed)
+
+`storage-engine.js#parseXlsFile()` หาหัวตารางด้วยการค้นเซลล์ `'JAN'` แล้วคำนวณตำแหน่งคอลัมน์ Section/No./ชื่อ/นามสกุล แบบ **relative offset** จากตำแหน่ง JAN (ไม่ hardcode index ตรงๆ) —ยึดตาม layout ของไฟล์ `Observetion PE1 2026..xls` จริง ถ้าพี่ A เปลี่ยน template ไฟล์ ต้องตรวจ layout ใหม่ก่อนแก้
+
+## Email banner (คัดลอกรูปสรุปเข้า clipboard)
+
+ปุ่ม "คัดลอกรูปสำหรับอีเมล" ใช้ `html2canvas` (CDN lazy-load แบบเดียวกับ SheetJS, ดู `AppConfig.HTML2CANVAS_CDN`) แปลง element ที่ render ไว้ใน `#emailBannerContainer` (ซ่อนนอกจอใน `index.html`) เป็นรูป PNG แล้วเขียนเข้า clipboard ด้วย `navigator.clipboard.write()` — ถ้าคัดลอกไม่ได้ (permission/browser ไม่รองรับ) จะ fallback เป็นดาวน์โหลดไฟล์แทนอัตโนมัติ
+
+Banner รวม**ทุกแผนกทุกเดือนเสมอ** (ไม่ตาม filter ที่ผู้ใช้เลือกอยู่บนจอ) และ auto-detect "รายงานประจำเดือน" จากเดือนล่าสุดที่มีข้อมูลจริงในปีที่เลือก (`UiRenderer._latestMonthWithData`) — ไม่ใช่เดือนปัจจุบันของปฏิทิน
+
+## Security
+
+- Gemini API key: AES-GCM 256-bit, non-extractable wrap key ใน IndexedDB — BYOK เหมาะกับ use case นี้เพราะใช้คนเดียว ยังไม่ deploy แชร์ต่อ (ถ้าจะแชร์ในอนาคต ต้องเปลี่ยนเป็น Cloudflare Worker proxy แทน — ดู `vibe-coding-core/references/ai-integration.md`)
+- ชื่อพนักงาน/แผนก/ข้อมูลจาก OCR ทุกจุดที่ render ต้องผ่าน `escHtml()` ใน utils.js ก่อนเสมอ (ป้องกัน XSS)
+
+## ยังไม่ได้ทำ (Phase ถัดไป)
+
+- ยังไม่ deploy (ไม่มี GitHub remote/Cloudflare Workers ผูกไว้ตอนนี้)
+- ไม่มี Cloud sync / multi-user
+- ยังไม่มี automated test (Vitest) — ถ้าจะเพิ่ม ต้องพิจารณาว่ายังไม่มี build step อยู่ ต้องเลือก test runner ที่ไม่บังคับ bundler (เช่น รัน Vitest ผ่าน npx ครั้งเดียวโดยไม่กระทบ dev workflow หลัก)

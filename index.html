@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stop Auto-Update | นับจำนวนงานพนักงาน</title>
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://unpkg.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src https://fonts.gstatic.com;
+  img-src 'self' data: https:;
+  connect-src 'self' https://generativelanguage.googleapis.com;
+  frame-ancestors 'none';
+" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Noto Sans Thai', 'Inter', 'system-ui', 'sans-serif'],
+          serif: ['Fraunces', 'Noto Sans Thai', 'serif'],
+        },
+      },
+    },
+  };
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link rel="stylesheet" href="./src/style.css" />
+</head>
+<body class="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors">
+
+<div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 items-end"></div>
+
+<!-- ===== Header ===== -->
+<header class="glass sticky top-0 z-30 border-b border-slate-200/60 dark:border-white/10 bg-white/70 dark:bg-slate-900/70">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🅰</span>
+      <h1 class="text-lg font-semibold brand-font">Stop Auto-Update</h1>
+      <span class="hidden sm:inline text-xs px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">STOP Observation Counter</span>
+    </div>
+    <div class="flex items-center gap-1">
+      <button id="btnSettings" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10" aria-label="ตั้งค่า">
+        <i data-lucide="settings" class="w-5 h-5"></i>
+      </button>
+      <button id="themeToggleBtn" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10" aria-label="สลับโหมดมืด/สว่าง">
+        <i id="themeToggleIcon" data-lucide="moon" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== Body layout ===== -->
+<div class="flex">
+  <!-- Sidebar -->
+  <aside class="hidden md:block w-56 shrink-0 border-r border-slate-200/60 dark:border-white/10 min-h-[calc(100vh-57px)] p-3">
+    <p class="text-xs font-semibold text-slate-400 px-3 mb-2 uppercase tracking-wide">แผนก</p>
+    <div id="sectionListContainer" class="flex flex-col gap-1"></div>
+    <button id="btnManageSections" class="mt-3 w-full text-left px-3 py-2 rounded-lg text-sm text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 flex items-center gap-1.5">
+      <i data-lucide="settings-2" class="w-4 h-4"></i> จัดการแผนก
+    </button>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 p-4">
+    <!-- Toolbar -->
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <label class="text-sm text-slate-500">ปี</label>
+      <select id="filterYearSelect" class="rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-800 px-2 py-1.5 text-sm"></select>
+
+      <div class="flex-1"></div>
+
+      <button id="btnAddEmployee" class="px-3 py-1.5 rounded-lg text-sm bg-sky-600 text-white hover:bg-sky-700 flex items-center gap-1.5">
+        <i data-lucide="user-plus" class="w-4 h-4"></i> เพิ่มพนักงาน
+      </button>
+      <button id="btnManualEntry" class="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 flex items-center gap-1.5">
+        <i data-lucide="pencil-line" class="w-4 h-4"></i> กรอกจำนวนงาน
+      </button>
+      <button id="btnImportAi" class="px-3 py-1.5 rounded-lg text-sm bg-violet-600 text-white hover:bg-violet-700 flex items-center gap-1.5">
+        <i data-lucide="scan-eye" class="w-4 h-4"></i> นำเข้าจากภาพ (AI)
+      </button>
+      <button id="btnImportExcelTrigger" class="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 flex items-center gap-1.5">
+        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> นำเข้าจาก Excel
+      </button>
+      <input type="file" id="btnImportExcelFile" accept=".xls,.xlsx" class="hidden" />
+
+      <button id="btnExportJson" class="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 flex items-center gap-1.5">
+        <i data-lucide="download" class="w-4 h-4"></i> Export
+      </button>
+      <button id="btnImportJsonTrigger" class="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 flex items-center gap-1.5">
+        <i data-lucide="upload" class="w-4 h-4"></i> Import
+      </button>
+      <input type="file" id="btnImportJsonFile" accept=".json" class="hidden" />
+
+      <button id="btnCopyEmailBanner" class="px-3 py-1.5 rounded-lg text-sm bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5">
+        <i data-lucide="mail" class="w-4 h-4"></i> คัดลอกรูปสำหรับอีเมล
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/60 dark:bg-white/5 overflow-x-auto">
+      <table class="w-full text-sm whitespace-nowrap">
+        <thead class="bg-slate-50/80 dark:bg-white/5 border-b border-slate-200/60 dark:border-white/10">
+          <tr id="monthHeaderRow"></tr>
+        </thead>
+        <tbody id="taskTableBody"></tbody>
+      </table>
+    </div>
+
+    <p class="text-xs text-slate-400 mt-3 text-center">A-Class WebCraft · Code • Share • Inspire · by Supasit.A</p>
+  </main>
+</div>
+
+<!-- ===== Modal: Employee ===== -->
+<div id="modalEmployee" class="modal-overlay hidden">
+  <div class="modal-card glass bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-xl max-w-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 id="employeeModalTitle" class="font-semibold">เพิ่มพนักงานใหม่</h2>
+      <button data-modal-close class="text-slate-400 hover:text-slate-600" aria-label="ปิด"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <form id="employeeForm" class="flex flex-col gap-3">
+      <input type="hidden" id="employeeId" />
+      <div>
+        <label class="text-xs text-slate-500">ลำดับ (No.)</label>
+        <input type="number" id="employeeNo" min="1" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-500">ชื่อ *</label>
+        <input type="text" id="employeeFirstName" required class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-500">นามสกุล</label>
+        <input type="text" id="employeeLastName" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-500">แผนก</label>
+        <select id="employeeSection" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm"></select>
+      </div>
+      <div class="flex items-center justify-between mt-2">
+        <button type="button" id="btnDeleteEmployee" class="hidden text-sm text-rose-600 hover:underline">ลบพนักงาน</button>
+        <button type="submit" class="ml-auto px-4 py-2 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-700">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Modal: Manage Sections ===== -->
+<div id="modalSections" class="modal-overlay hidden">
+  <div class="modal-card glass bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-xl max-w-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">จัดการแผนก</h2>
+      <button data-modal-close class="text-slate-400 hover:text-slate-600" aria-label="ปิด"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div id="sectionsManageList" class="flex flex-col gap-1.5 max-h-60 overflow-y-auto mb-3"></div>
+    <form id="newSectionForm" class="flex gap-2">
+      <input type="text" id="newSectionName" placeholder="ชื่อแผนกใหม่" class="flex-1 rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      <button type="submit" class="px-3 py-2 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-700">+ เพิ่ม</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Modal: Manual Entry ===== -->
+<div id="modalManualEntry" class="modal-overlay hidden">
+  <div class="modal-card glass bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-xl max-w-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">กรอกจำนวนงาน</h2>
+      <button data-modal-close class="text-slate-400 hover:text-slate-600" aria-label="ปิด"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <form id="manualEntryForm" class="flex flex-col gap-3">
+      <div>
+        <label class="text-xs text-slate-500">พนักงาน</label>
+        <select id="manualEntryEmployee" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-500">ปี</label>
+          <input type="number" id="manualEntryYear" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-500">เดือน</label>
+          <select id="manualEntryMonth" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm"></select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-500">จำนวนงาน</label>
+        <input type="number" id="manualEntryCount" min="0" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      </div>
+      <button type="submit" class="ml-auto px-4 py-2 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-700">บันทึก</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Modal: Excel Import ===== -->
+<div id="modalExcelImport" class="modal-overlay hidden">
+  <div class="modal-card glass bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-xl max-w-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">นำเข้าจากไฟล์ Excel</h2>
+      <button data-modal-close class="text-slate-400 hover:text-slate-600" aria-label="ปิด"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <p class="text-xs text-slate-500 mb-3">ไฟล์: <span id="excelImportFileInfo" class="font-medium"></span></p>
+    <form id="excelImportForm" class="flex flex-col gap-3">
+      <div>
+        <label class="text-xs text-slate-500">ปีของข้อมูลในไฟล์นี้</label>
+        <input type="number" id="excelImportYear" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      </div>
+      <p class="text-xs text-slate-400">จะอ่านคอลัมน์ Section / ชื่อ-นามสกุล / JAN-DEC จากชีตแรก แล้วสร้างแผนก+พนักงาน+จำนวนงานให้อัตโนมัติ</p>
+      <button type="submit" id="btnExcelImportConfirm" class="ml-auto px-4 py-2 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-700">นำเข้าข้อมูล</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Modal: OCR Import ===== -->
+<div id="modalOcrImport" class="modal-overlay hidden">
+  <div class="modal-card glass bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-xl max-w-lg p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">นำเข้าจากภาพ (AI OCR)</h2>
+      <button data-modal-close class="text-slate-400 hover:text-slate-600" aria-label="ปิด"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="text-xs text-slate-500">ปี</label>
+        <input type="number" id="ocrYear" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-500">เดือน</label>
+        <select id="ocrMonth" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm"></select>
+      </div>
+    </div>
+
+    <div id="ocrDropzone" tabindex="0" class="rounded-xl border-2 border-dashed border-slate-300 dark:border-white/20 p-4 mb-2 focus:outline-none focus:border-sky-400 text-center">
+      <p class="text-xs text-slate-400 mb-2">ลากวางภาพ • คลิกที่กรอบนี้แล้วกด Ctrl+V เพื่อวางจากคลิปบอร์ด (วางได้หลายภาพต่อกัน) • หรือ
+        <button type="button" id="btnOcrChooseFile" class="text-sky-600 dark:text-sky-400 underline">เลือกไฟล์จากเครื่อง</button>
+      </p>
+      <div id="ocrImageQueue" class="flex flex-wrap justify-center"></div>
+    </div>
+    <input type="file" id="ocrFileInput" accept="image/*" multiple class="hidden" />
+
+    <button id="btnOcrAnalyze" class="w-full px-4 py-2 rounded-lg bg-violet-600 text-white text-sm hover:bg-violet-700 mb-3">🔍 วิเคราะห์ทุกภาพ</button>
+
+    <div id="ocrReviewSection" class="hidden">
+      <p class="text-xs text-slate-500 mb-2">ตรวจสอบก่อนบันทึก — แก้ไขคนที่จับคู่ผิด หรือปรับจำนวนได้</p>
+      <div id="ocrReviewList" class="max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10 mb-3"></div>
+      <button id="btnOcrSaveAll" class="w-full px-4 py-2 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-700">บันทึกทั้งหมด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Settings ===== -->
+<div id="modalSettings" class="modal-overlay hidden">
+  <div class="modal-card glass bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-xl max-w-sm p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">ตั้งค่า</h2>
+      <button data-modal-close class="text-slate-400 hover:text-slate-600" aria-label="ปิด"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <p class="text-xs text-slate-500 mb-2">Gemini API Key (เข้ารหัส AES-GCM เก็บในเครื่องนี้เท่านั้น ไม่ส่งไปที่ไหน)</p>
+    <p id="geminiKeyStatus" class="text-sm text-slate-400 mb-3">ยังไม่ได้ตั้งค่า API key</p>
+    <form id="geminiSettingsForm" class="flex flex-col gap-3">
+      <input type="password" id="geminiApiKeyInput" placeholder="วาง Gemini API key ที่นี่" class="w-full rounded-lg border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900 px-3 py-2 text-sm" />
+      <div class="flex items-center justify-between">
+        <button type="button" id="btnClearGeminiKey" class="text-sm text-rose-600 hover:underline">ลบ key</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-700">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Offscreen container used only when rendering the email-banner image (html2canvas target) -->
+<div id="emailBannerContainer" style="position:absolute; left:-99999px; top:0;"></div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

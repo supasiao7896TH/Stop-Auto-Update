@@ -1,0 +1,85 @@
+html, body {
+  font-family: 'Noto Sans Thai', 'Inter', system-ui, sans-serif;
+}
+
+h1, h2, .brand-font {
+  font-family: 'Fraunces', 'Noto Sans Thai', serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.glass {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  padding: 1rem;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-card {
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Manual dark-mode overrides ---------------------------------------------
+   Tailwind's browser CDN build (cdn.tailwindcss.com) no longer honors
+   `tailwind.config.darkMode = 'class'` set via the inline <script> in
+   index.html — it compiles every `dark:` utility under
+   `@media (prefers-color-scheme: dark)` regardless of that setting, so the
+   manual light/dark toggle button (which only ever adds/removes the
+   `dark` class on <html>) has no effect on Tailwind's own dark: utilities.
+   Values below are copied from Tailwind's default palette (same values
+   Tailwind itself generated for these exact classes) and re-declared under
+   `html.dark`, which the toggle DOES control. */
+html.dark .dark\:bg-slate-700 { background-color: rgb(51 65 85); }
+html.dark .dark\:bg-slate-800 { background-color: rgb(30 41 59); }
+html.dark .dark\:bg-slate-800\/90 { background-color: rgba(30, 41, 59, 0.9); }
+html.dark .dark\:bg-slate-900 { background-color: rgb(15 23 42); }
+html.dark .dark\:bg-slate-900\/70 { background-color: rgba(15, 23, 42, 0.7); }
+html.dark .dark\:bg-sky-900\/40 { background-color: rgba(12, 74, 110, 0.4); }
+html.dark .dark\:bg-white\/5 { background-color: rgba(255, 255, 255, 0.05); }
+html.dark .dark\:bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
+html.dark .dark\:bg-emerald-900\/40 { background-color: rgba(6, 78, 59, 0.4); }
+html.dark .dark\:bg-amber-900\/40 { background-color: rgba(120, 53, 15, 0.4); }
+html.dark .dark\:text-slate-100 { color: rgb(241 245 249); }
+html.dark .dark\:text-slate-600 { color: rgb(71 85 105); }
+html.dark .dark\:text-sky-300 { color: rgb(125 211 252); }
+html.dark .dark\:text-sky-400 { color: rgb(56 189 248); }
+html.dark .dark\:text-emerald-300 { color: rgb(110 231 183); }
+html.dark .dark\:text-amber-300 { color: rgb(252 211 77); }
+html.dark .dark\:border-white\/5 { border-color: rgba(255, 255, 255, 0.05); }
+html.dark .dark\:border-white\/10 { border-color: rgba(255, 255, 255, 0.1); }
+html.dark .dark\:border-white\/20 { border-color: rgba(255, 255, 255, 0.2); }
+html.dark .dark\:hover\:bg-white\/5:hover { background-color: rgba(255, 255, 255, 0.05); }
+html.dark .dark\:hover\:bg-white\/10:hover { background-color: rgba(255, 255, 255, 0.1); }
+html.dark .dark\:hover\:bg-white\/20:hover { background-color: rgba(255, 255, 255, 0.2); }
+html.dark .dark\:hover\:bg-sky-900\/20:hover { background-color: rgba(12, 74, 110, 0.2); }
+html.dark .dark\:hover\:bg-sky-900\/40:hover { background-color: rgba(12, 74, 110, 0.4); }
