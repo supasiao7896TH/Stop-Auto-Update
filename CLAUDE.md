@@ -1,10 +1,20 @@
-# CLAUDE.md — Stop Auto-Update
+# CLAUDE.md
 
-## รันโปรเจกต์
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Multi-file ES Modules **ไม่มี build step** — ห้ามเพิ่ม Vite/Webpack/bundler ใดๆ (ขัดกับมาตรฐาน Vibe Coding ของพี่ A ที่ห้าม build tools เพื่อไม่ให้ workflow เครื่องบ้าน/ที่ทำงานพัง)
+## โปรเจกต์
+
+**Stop Auto-Update** — เว็บแอปนับจำนวน STOP Observation ต่อพนักงาน/เดือน กรอกมือได้ หรือวาง screenshot รายงานจาก Lotus Notes แล้วให้ Gemini Vision อ่านชื่อ+นับจำนวนให้อัตโนมัติ Local-first (IndexedDB) ไม่มี backend server ของตัวเอง
+
+Live: https://stop-auto-update.supasiao.workers.dev
+
+## Commands
+
+Multi-file ES Modules **ไม่มี build step** — ห้ามเพิ่ม Vite/Webpack/bundler ใดๆ (ขัดกับมาตรฐาน Vibe Coding ของพี่ A ที่ห้าม build tools เพื่อไม่ให้ workflow เครื่องบ้าน/ที่ทำงานพัง) ไม่มี `package.json`/npm scripts, ไม่มี lint, ไม่มี automated test — ยังไม่ได้ตั้ง Vitest ไว้เลย (ถ้าจะเพิ่มในอนาคต ต้องเลือก test runner ที่ไม่บังคับ bundler เพราะไม่มี build step)
 
 รันด้วย VS Code "Open with Live Server" หรือ `npx serve .` — ต้องผ่าน local server เสมอ (ES module `import` โดน CORS บล็อกถ้าเปิดแบบ `file://`)
+
+Deploy: push ขึ้น branch `main` → GitHub Actions (`.github/workflows/deploy.yml`) รัน `wrangler deploy` อัตโนมัติขึ้น Cloudflare Workers (static assets, ดู `wrangler.jsonc`) — ไม่มี CI แยกสำหรับ build/test เพราะไม่มีขั้นตอนนั้นให้รัน
 
 ## สถาปัตยกรรม
 
@@ -39,6 +49,8 @@ cryptoKeys:   { name: 'geminiKeyWrap', key }   ← non-extractable AES-GCM Crypt
 
 การเพิ่ม/แก้ taskEntries **ต้องผ่าน** `_upsertTaskEntry()` ใน app-core.js เท่านั้น (หา entry เดิมด้วย employeeId+year+month แล้ว update-in-place หรือสร้างใหม่) — ห้าม `put` เข้า taskEntries ตรงๆ จากที่อื่น เพราะจะข้าม dedup logic นี้ไป
 
+`StorageEngine.open()` memoize connection เดียวไว้ใน `dbPromise` (module-level singleton) — เรียกซ้ำกี่ครั้งได้ connection เดิม ไม่เปิดซ้ำ
+
 ## OCR import — จุดที่ต้องเข้าใจก่อนแก้
 
 ภาพต้นทาง (screenshot รายงาน Lotus Notes) **ไม่มีคอลัมน์ตัวเลขจำนวนงาน** — แต่ละแถวคือ 1 observation record ของคนคนหนึ่ง ต้องนับจำนวนแถวที่ชื่อซ้ำกันเอง
@@ -51,7 +63,7 @@ cryptoKeys:   { name: 'geminiKeyWrap', key }   ← non-extractable AES-GCM Crypt
 
 ## Excel import (.xls seed)
 
-`storage-engine.js#parseXlsFile()` หาหัวตารางด้วยการค้นเซลล์ `'JAN'` แล้วคำนวณตำแหน่งคอลัมน์ Section/No./ชื่อ/นามสกุล แบบ **relative offset** จากตำแหน่ง JAN (ไม่ hardcode index ตรงๆ) —ยึดตาม layout ของไฟล์ `Observetion PE1 2026..xls` จริง ถ้าพี่ A เปลี่ยน template ไฟล์ ต้องตรวจ layout ใหม่ก่อนแก้
+`storage-engine.js#parseXlsFile()` หาหัวตารางด้วยการค้นเซลล์ `'JAN'` แล้วคำนวณตำแหน่งคอลัมน์ Section/No./ชื่อ/นามสกุล แบบ **relative offset** จากตำแหน่ง JAN (ไม่ hardcode index ตรงๆ) —ยึดตาม layout ของไฟล์ `Observetion PE1 2026..xls` จริง ถ้าพี่ A เปลี่ยน template ไฟล์ ต้องตรวจ layout ใหม่ก่อนแก้ (ไฟล์ `.xls`/`.xlsx` ต้นฉบับอยู่ที่ root แต่ไม่ถูก track ใน git — ดู `.gitignore`)
 
 ## Default seed data (`src/assets/seed-data.json`)
 
@@ -67,11 +79,11 @@ Banner รวม**ทุกแผนกทุกเดือนเสมอ** (�
 
 ## Security
 
-- Gemini API key: AES-GCM 256-bit, non-extractable wrap key ใน IndexedDB — BYOK เหมาะกับ use case นี้เพราะใช้คนเดียว ยังไม่ deploy แชร์ต่อ (ถ้าจะแชร์ในอนาคต ต้องเปลี่ยนเป็น Cloudflare Worker proxy แทน — ดู `vibe-coding-core/references/ai-integration.md`)
+- Gemini API key: AES-GCM 256-bit, non-extractable wrap key ใน IndexedDB — BYOK เหมาะกับ use case นี้เพราะใช้คนเดียว ยังไม่ได้ทำ shared multi-user จริงจัง (ถ้าจะแชร์ key กลางในอนาคต ต้องเปลี่ยนเป็น Cloudflare Worker proxy แทน — ดู `vibe-coding-core/references/ai-integration.md`)
 - ชื่อพนักงาน/แผนก/ข้อมูลจาก OCR ทุกจุดที่ render ต้องผ่าน `escHtml()` ใน utils.js ก่อนเสมอ (ป้องกัน XSS)
+- รายชื่อพนักงาน/แผนกไม่ใช่ข้อมูลลับ (ยืนยันแล้ว) — เก็บใน `src/assets/seed-data.json` และ deploy ขึ้น production ได้ปกติ
 
-## ยังไม่ได้ทำ (Phase ถัดไป)
+## ยังไม่ได้ทำ
 
-- ยังไม่ deploy (ไม่มี GitHub remote/Cloudflare Workers ผูกไว้ตอนนี้)
-- ไม่มี Cloud sync / multi-user
-- ยังไม่มี automated test (Vitest) — ถ้าจะเพิ่ม ต้องพิจารณาว่ายังไม่มี build step อยู่ ต้องเลือก test runner ที่ไม่บังคับ bundler (เช่น รัน Vitest ผ่าน npx ครั้งเดียวโดยไม่กระทบ dev workflow หลัก)
+- ไม่มี Cloud sync / multi-user (แต่ละเบราว์เซอร์เก็บข้อมูลแยกกันใน IndexedDB ของตัวเอง)
+- ไม่มี automated test
