@@ -545,6 +545,10 @@ export const AppCore = (() => {
   function _bindEvents() {
     document.getElementById('themeToggleBtn').addEventListener('click', _toggleTheme);
 
+    document.getElementById('btnHelp').addEventListener('click', () => {
+      UiRenderer.openModal('modalHelp');
+    });
+
     document.getElementById('btnSettings').addEventListener('click', async () => {
       UiRenderer.setGeminiKeyStatus(await GeminiAiBridge.hasApiKey());
       UiRenderer.openModal('modalSettings');

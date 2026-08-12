@@ -49,6 +49,9 @@
       <img src="./src/assets/brand/lotus-stop-icon.png" alt="Lotus Notes STOP Observation" class="h-14 w-auto rounded" />
     </div>
     <div class="flex items-center gap-1">
+      <button id="btnHelp" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10" aria-label="คู่มือการใช้งาน">
+        <i data-lucide="circle-help" class="w-5 h-5"></i>
+      </button>
       <button id="btnSettings" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10" aria-label="ตั้งค่า">
         <i data-lucide="settings" class="w-5 h-5"></i>
       </button>
@@ -272,6 +275,75 @@
         <button type="submit" class="px-4 py-2 rounded-lg bg-sky-600 text-white text-sm hover:bg-sky-700">บันทึก</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ===== Modal: Help / User Guide ===== -->
+<div id="modalHelp" class="modal-overlay hidden">
+  <div class="modal-card glass bg-white/90 dark:bg-slate-800/90 rounded-2xl shadow-xl max-w-lg p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold flex items-center gap-2"><i data-lucide="circle-help" class="w-5 h-5"></i> คู่มือการใช้งาน</h2>
+      <button data-modal-close class="text-slate-400 hover:text-slate-600" aria-label="ปิด"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="max-h-[70vh] overflow-y-auto pr-1 flex flex-col gap-4 text-sm">
+      <div class="flex gap-3">
+        <i data-lucide="user-plus" class="w-4 h-4 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400"></i>
+        <div>
+          <p class="font-medium">เพิ่ม/แก้ไขพนักงาน</p>
+          <p class="text-slate-500 dark:text-slate-400">กดปุ่ม "เพิ่มพนักงาน" เพื่อเพิ่มคนใหม่ หรือคลิกที่ชื่อในตารางเพื่อแก้ไข/ลบพนักงานคนนั้น</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <i data-lucide="settings-2" class="w-4 h-4 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400"></i>
+        <div>
+          <p class="font-medium">จัดการแผนก</p>
+          <p class="text-slate-500 dark:text-slate-400">ใช้ปุ่ม "จัดการแผนก" ที่แถบด้านซ้าย เพื่อเพิ่ม/ลบแผนกได้</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <i data-lucide="pencil-line" class="w-4 h-4 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400"></i>
+        <div>
+          <p class="font-medium">กรอกจำนวนงานด้วยมือ</p>
+          <p class="text-slate-500 dark:text-slate-400">กดปุ่ม "กรอกจำนวนงาน" แล้วเลือกพนักงาน + ปี + เดือน เพื่อกรอกจำนวนทีละคน</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <i data-lucide="scan-eye" class="w-4 h-4 mt-0.5 shrink-0 text-violet-600 dark:text-violet-400"></i>
+        <div>
+          <p class="font-medium">นำเข้าจากภาพ (AI OCR)</p>
+          <p class="text-slate-500 dark:text-slate-400">กดปุ่ม "นำเข้าจากภาพ (AI)" แล้ววาง/อัปโหลด screenshot รายงาน Lotus Notes ได้หลายภาพต่อครั้ง ต้องตั้งค่า Gemini API key ที่ปุ่ม ⚙ ก่อนใช้งาน — มีหน้าตรวจสอบให้ยืนยันก่อนบันทึกเสมอ และผลลัพธ์จะ<strong>เขียนทับ</strong>ยอดเดือนนั้นทั้งหมด ไม่ใช่บวกเพิ่ม</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <i data-lucide="file-spreadsheet" class="w-4 h-4 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400"></i>
+        <div>
+          <p class="font-medium">นำเข้าจาก Excel</p>
+          <p class="text-slate-500 dark:text-slate-400">กดปุ่ม "นำเข้าจาก Excel" แล้วเลือกไฟล์รูปแบบเดียวกับ template ที่ใช้อยู่ (คอลัมน์ Section / ชื่อ-นามสกุล / JAN-DEC)</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <i data-lucide="download" class="w-4 h-4 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400"></i>
+        <div>
+          <p class="font-medium">Export / Import JSON</p>
+          <p class="text-slate-500 dark:text-slate-400">ข้อมูลทั้งหมดเก็บใน IndexedDB ของเบราว์เซอร์เครื่องนี้เท่านั้น ไม่ sync ข้ามเครื่องอัตโนมัติ — ใช้ Export/Import เพื่อสำรองหรือย้ายข้อมูล</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <i data-lucide="mail" class="w-4 h-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"></i>
+        <div>
+          <p class="font-medium">คัดลอกรูปสำหรับอีเมล</p>
+          <p class="text-slate-500 dark:text-slate-400">สร้างรูปสรุปทุกแผนก/ทุกเดือน แล้วคัดลอกเข้าคลิปบอร์ดให้วางลงอีเมลได้ทันที (ถ้าคัดลอกไม่ได้จะดาวน์โหลดไฟล์ให้แทนอัตโนมัติ)</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <i data-lucide="moon" class="w-4 h-4 mt-0.5 shrink-0 text-sky-600 dark:text-sky-400"></i>
+        <div>
+          <p class="font-medium">โหมดมืด/สว่าง</p>
+          <p class="text-slate-500 dark:text-slate-400">กดปุ่มพระจันทร์/พระอาทิตย์มุมขวาบนเพื่อสลับธีมได้ตลอด</p>
+        </div>
+      </div>
+    </div>
+    <p class="text-xs text-slate-400 mt-4 text-center">A-Class WebCraft · Code • Share • Inspire · by Supasit.A</p>
   </div>
 </div>
 
