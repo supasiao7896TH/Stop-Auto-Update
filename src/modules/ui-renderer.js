@@ -347,10 +347,14 @@ export const UiRenderer = (() => {
 
     container.innerHTML = `
       <div style="background:#ffffff; width:1180px; font-family:'Noto Sans Thai', Arial, sans-serif; color:#1e293b;">
-        <div style="text-align:center; padding:20px 24px; background:#e5effa;">
-          <div style="font-size:22px; font-weight:700; color:#184f95;">STOP Observation Summary</div>
-          <div style="font-size:13px; color:#52514e; margin-top:4px;">แผนก: ${escHtml(AppConfig.REPORT_DEPARTMENT_LABEL)}</div>
-          <div style="font-size:13px; color:#52514e;">รายงานประจำเดือน ${escHtml(reportLabel)}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; background:#e5effa;">
+          <img src="./src/assets/brand/gcm-pta-logo.png" style="height:48px; width:auto;" alt="GCM PTA" />
+          <div style="text-align:center; flex:1;">
+            <div style="font-size:22px; font-weight:700; color:#184f95;">STOP Observation Summary</div>
+            <div style="font-size:13px; color:#52514e; margin-top:4px;">แผนก: ${escHtml(AppConfig.REPORT_DEPARTMENT_LABEL)}</div>
+            <div style="font-size:13px; color:#52514e;">รายงานประจำเดือน ${escHtml(reportLabel)}</div>
+          </div>
+          <img src="./src/assets/brand/lotus-stop-icon.png" style="height:56px; width:auto; border-radius:6px;" alt="Lotus Notes STOP Observation" />
         </div>
         <div style="display:flex; height:6px;">
           <div style="flex:0.365; background:#F4614B;"></div>
