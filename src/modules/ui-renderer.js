@@ -288,52 +288,72 @@ export const UiRenderer = (() => {
     if (!container) return;
 
     const sectionNameById = new Map(sections.map((s) => [s.id, s.name]));
+    // สีตายตัวต่อแผนกตามลำดับ section.order — ไม่ผูกกับลำดับที่ filter/แสดงผล
+    // เพื่อให้แผนกเดิมได้สีเดิมเสมอไม่ว่าจะ render กี่รอบ (categorical color ต้องผูกกับ entity)
+    const sortedSections = sections.slice().sort((a, b) => a.order - b.order);
+    const sectionColorById = new Map(
+      sortedSections.map((s, i) => [s.id, AppConfig.SECTION_COLOR_PALETTE[i % AppConfig.SECTION_COLOR_PALETTE.length]])
+    );
+    const neutralBadge = { bg: '#f1f5f9', text: '#64748b' };
+
     const latestMonth = _latestMonthWithData(taskEntries, year);
     const reportLabel = latestMonth ? `${AppConfig.MONTH_NAMES_FULL[latestMonth - 1]} ${year}` : String(year);
 
     const sortedEmployees = employees.slice().sort((a, b) => a.no - b.no);
     const monthHeaderCells = AppConfig.MONTH_NAMES.map(
-      (m) => `<th style="padding:6px 8px; border:1px solid #e2e8f0; background:#f1f5f9;">${m}</th>`
+      (m) => `<th style="padding:8px; border:1px solid #1c5cab; color:#ffffff;">${m}</th>`
     ).join('');
 
     const rows = sortedEmployees
-      .map((emp) => {
+      .map((emp, idx) => {
+        const rowBg = idx % 2 === 0 ? '#ffffff' : '#f9f9f7';
         const monthCells = AppConfig.MONTH_NAMES.map((_, i) => {
           const count = _monthCount(taskEntries, emp.id, year, i + 1);
-          return `<td style="padding:6px 8px; border:1px solid #e2e8f0; text-align:center;">${count ?? '–'}</td>`;
+          return `<td style="padding:6px 8px; border:1px solid #e2e8f0; text-align:center; background:${rowBg};">${count ?? '–'}</td>`;
         }).join('');
         const sum = AppConfig.MONTH_NAMES.reduce((acc, _, i) => acc + (_monthCount(taskEntries, emp.id, year, i + 1) || 0), 0);
+        const sectionColor = sectionColorById.get(emp.sectionId) || neutralBadge;
+        const sectionBadge = `<span style="display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; background:${sectionColor.bg}; color:${sectionColor.text};">${escHtml(sectionNameById.get(emp.sectionId) || '-')}</span>`;
         return `<tr>
-          <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#64748b;">${escHtml(sectionNameById.get(emp.sectionId) || '-')}</td>
-          <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#64748b;">${emp.no}</td>
-          <td style="padding:6px 8px; border:1px solid #e2e8f0; font-weight:600;">${escHtml(fullName(emp))}</td>
+          <td style="padding:6px 8px; border:1px solid #e2e8f0; background:${rowBg};">${sectionBadge}</td>
+          <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#64748b; background:${rowBg};">${emp.no}</td>
+          <td style="padding:6px 8px; border:1px solid #e2e8f0; font-weight:600; background:${rowBg};">${escHtml(fullName(emp))}</td>
           ${monthCells}
-          <td style="padding:6px 8px; border:1px solid #e2e8f0; text-align:center; font-weight:700; color:#0369a1;">${sum}</td>
+          <td style="padding:6px 8px; border:1px solid #e2e8f0; text-align:center; background:${rowBg};">
+            <span style="display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; background:#e5effa; color:#1c5cab;">${sum}</span>
+          </td>
         </tr>`;
       })
       .join('');
 
     container.innerHTML = `
-      <div style="background:#ffffff; padding:24px; width:1180px; font-family:'Noto Sans Thai', Arial, sans-serif; color:#1e293b;">
-        <div style="text-align:center; margin-bottom:16px;">
-          <div style="font-size:22px; font-weight:700;">STOP Observation Summary</div>
-          <div style="font-size:13px; color:#64748b; margin-top:4px;">แผนก: ${escHtml(AppConfig.REPORT_DEPARTMENT_LABEL)}</div>
-          <div style="font-size:13px; color:#64748b;">รายงานประจำเดือน ${escHtml(reportLabel)}</div>
+      <div style="background:#ffffff; width:1180px; font-family:'Noto Sans Thai', Arial, sans-serif; color:#1e293b;">
+        <div style="text-align:center; padding:20px 24px; background:#e5effa;">
+          <div style="font-size:22px; font-weight:700; color:#184f95;">STOP Observation Summary</div>
+          <div style="font-size:13px; color:#52514e; margin-top:4px;">แผนก: ${escHtml(AppConfig.REPORT_DEPARTMENT_LABEL)}</div>
+          <div style="font-size:13px; color:#52514e;">รายงานประจำเดือน ${escHtml(reportLabel)}</div>
         </div>
-        <table style="width:100%; border-collapse:collapse; font-size:12px;">
-          <thead>
-            <tr>
-              <th style="padding:6px 8px; border:1px solid #e2e8f0; background:#f1f5f9;">Section</th>
-              <th style="padding:6px 8px; border:1px solid #e2e8f0; background:#f1f5f9;">No.</th>
-              <th style="padding:6px 8px; border:1px solid #e2e8f0; background:#f1f5f9;">ชื่อ-นามสกุล</th>
-              ${monthHeaderCells}
-              <th style="padding:6px 8px; border:1px solid #e2e8f0; background:#f1f5f9;">SUM</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <div style="text-align:center; margin-top:16px; font-size:11px; color:#94a3b8;">
-          สร้างเมื่อ ${escHtml(new Date().toLocaleString('th-TH'))} · A-Class WebCraft · by Supasit.A
+        <div style="display:flex; height:6px;">
+          <div style="flex:0.365; background:#F4614B;"></div>
+          <div style="flex:0.25; background:#ffffff;"></div>
+          <div style="flex:0.385; background:#3D4EA3;"></div>
+        </div>
+        <div style="padding:20px 24px;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+              <tr style="background:#2a78d6;">
+                <th style="padding:8px; border:1px solid #1c5cab; color:#ffffff;">Section</th>
+                <th style="padding:8px; border:1px solid #1c5cab; color:#ffffff;">No.</th>
+                <th style="padding:8px; border:1px solid #1c5cab; color:#ffffff;">ชื่อ-นามสกุล</th>
+                ${monthHeaderCells}
+                <th style="padding:8px; border:1px solid #1c5cab; color:#ffffff;">SUM</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div style="text-align:center; margin-top:16px; font-size:11px; color:#94a3b8;">
+            สร้างเมื่อ ${escHtml(new Date().toLocaleString('th-TH'))} · A-Class WebCraft · by Supasit.A
+          </div>
         </div>
       </div>`;
   }

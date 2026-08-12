@@ -32,6 +32,20 @@ export const AppConfig = (() => {
     SHEETJS_CDN: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
     HTML2CANVAS_CDN: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
 
+    // Categorical palette จาก dataviz skill (เรียงลำดับตายตัว ผ่านการ validate เรื่อง
+    // colorblind-safety แล้ว — ห้ามสลับลำดับ) ใช้ badge สีตามแผนกในรูปสรุปอีเมล
+    // bg = tint อ่อนสำหรับพื้นหลัง badge, text = เฉดเข้มของสีเดียวกันสำหรับตัวหนังสือ (อ่านง่าย)
+    SECTION_COLOR_PALETTE: [
+      { bg: '#E5EFFA', text: '#1B4E8B' }, // blue
+      { bg: '#FDECE6', text: '#994422' }, // orange
+      { bg: '#E3F5EF', text: '#12724F' }, // aqua
+      { bg: '#FDF4E0', text: '#9A6900' }, // yellow
+      { bg: '#FCEFF4', text: '#97506B' }, // magenta
+      { bg: '#E0F0E0', text: '#005500' }, // green
+      { bg: '#E9E7F4', text: '#30266D' }, // violet
+      { bg: '#FCE9E9', text: '#942F2F' }, // red
+    ],
+
     CURRENT_YEAR: new Date().getFullYear(),
     THEME_STORAGE_KEY: 'stop-auto-update-theme',
   };
