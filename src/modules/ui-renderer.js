@@ -15,6 +15,13 @@ export const UiRenderer = (() => {
     const icon = $('themeToggleIcon');
     if (icon) icon.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
     if (window.lucide) window.lucide.createIcons();
+
+    // D1 (สว่าง) กับ D2 (มืด) เป็นโลโก้เดียวกันคนละโหมด — ห้ามใช้ D1 บนพื้นมืด (คอนทราสต์ไม่พอ)
+    const brandLogo = $('brandLogo');
+    if (brandLogo) {
+      brandLogo.src =
+        theme === 'dark' ? './src/assets/brand/d2-crt-night-bare.svg' : './src/assets/brand/d1-neon-arcade-bare.svg';
+    }
   }
 
   // ---- Toast ----
@@ -271,7 +278,9 @@ export const UiRenderer = (() => {
   // ---- Email banner (image export for pasting into email) ----
 
   function _latestMonthWithData(taskEntries, year) {
-    const months = taskEntries.filter((t) => t.year === year).map((t) => t.month);
+    // นับเฉพาะเดือนที่มีจำนวนงานจริง (count > 0) — แถวที่ count เป็น 0 (เช่น กรอกฟอร์ม
+    // แล้วเผลอไม่ใส่เลข) ไม่ควรถูกตีความว่า "เดือนนี้มีคนเขียนรายงานแล้ว"
+    const months = taskEntries.filter((t) => t.year === year && t.count > 0).map((t) => t.month);
     return months.length ? Math.max(...months) : null;
   }
 
