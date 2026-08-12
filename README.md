@@ -2,6 +2,8 @@
 
 เว็บแอปนับจำนวน STOP Observation ต่อพนักงาน/เดือน — กรอกมือได้ หรือวาง screenshot จากรายงาน Lotus Notes แล้วให้ Gemini Vision อ่านชื่อ+นับจำนวนให้อัตโนมัติ
 
+🔗 **ใช้งานออนไลน์:** https://stop-auto-update.supasiao.workers.dev
+
 ## วิธีรัน (ไม่ต้อง npm install)
 
 แอปนี้เป็น **Multi-file แบบไม่มี build step** (ES Modules ธรรมดา) — เบราว์เซอร์บล็อกการ `import` module ถ้าเปิดไฟล์แบบ `file://` ตรงๆ (CORS) จึงต้องรันผ่าน local server เล็กๆ แค่ครั้งเดียวตอนเปิดใช้งาน ไม่ต้องติดตั้งอะไรถาวร:
@@ -33,10 +35,15 @@ npx serve .
 
 ทั้งหมดเก็บใน **IndexedDB ของเบราว์เซอร์เครื่องนั้นๆ** (`stop_auto_update_db`) ไม่มี cloud sync ในเวอร์ชันนี้ — ถ้าจะย้ายข้อมูลข้ามเครื่อง ใช้ปุ่ม Export/Import JSON
 
-Gemini API key เข้ารหัส AES-GCM 256-bit ก่อนเก็บใน IndexedDB (ปุ่ม ⚙ ตั้งค่า) — ใช้แบบ BYOK คนเดียว ยังไม่ได้ deploy แชร์ให้คนอื่น
+Gemini API key เข้ารหัส AES-GCM 256-bit ก่อนเก็บใน IndexedDB (ปุ่ม ⚙ ตั้งค่า) — ใช้แบบ BYOK ต่อเบราว์เซอร์/เครื่อง (แต่ละคนที่เปิด URL ต้องตั้ง key ของตัวเอง เพราะ IndexedDB ไม่ sync ข้ามเครื่อง)
+
+## Deploy
+
+Deploy อยู่บน Cloudflare Workers ผ่าน GitHub Actions (`wrangler deploy` อัตโนมัติทุกครั้งที่ push ขึ้น `main`) — ดูรายละเอียดที่ `.github/workflows/deploy.yml` และ `wrangler.jsonc`
 
 ## Roadmap
 
 - [x] Phase ① Local-First + Excel Import + AI OCR (เวอร์ชันนี้)
-- [ ] Phase ② ปรับปรุงตาม feedback การใช้งานจริง
-- [ ] Phase ③/④ Cloud sync + Deploy (ถ้าต้องการแชร์ทีมในอนาคต — ดู skill `cloudflare-workers-deploy`)
+- [x] Phase ② ปรับปรุงตาม feedback การใช้งานจริง (แก้ id-patch bug, dark mode, OCR name matching, sort by No., email banner export)
+- [x] Phase ④ Deploy ขึ้น Cloudflare Workers
+- [ ] Phase ③ Cloud sync (ถ้าต้องการ real-time หลายคนแก้พร้อมกันในอนาคต — ดู skill `vibe-coding-firebase`)
