@@ -332,14 +332,14 @@ export const UiRenderer = (() => {
         }).join('');
         const sum = AppConfig.MONTH_NAMES.reduce((acc, _, i) => acc + (_monthCount(taskEntries, emp.id, year, i + 1) || 0), 0);
         const sectionColor = sectionColorById.get(emp.sectionId) || neutralBadge;
-        const sectionBadge = `<span style="display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; background:${sectionColor.bg}; color:${sectionColor.text};">${escHtml(sectionNameById.get(emp.sectionId) || '-')}</span>`;
+        const sectionBadge = `<span style="font-weight:600; color:${sectionColor.text};">${escHtml(sectionNameById.get(emp.sectionId) || '-')}</span>`;
         return `<tr>
           <td style="padding:6px 8px; border:1px solid #e2e8f0; background:${rowBg};">${sectionBadge}</td>
           <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#64748b; background:${rowBg};">${emp.no}</td>
           <td style="padding:6px 8px; border:1px solid #e2e8f0; font-weight:600; background:${rowBg};">${escHtml(fullName(emp))}</td>
           ${monthCells}
           <td style="padding:6px 8px; border:1px solid #e2e8f0; text-align:center; background:${rowBg};">
-            <span style="display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; background:#e5effa; color:#1c5cab;">${sum}</span>
+            <span style="font-weight:700; color:#1c5cab;">${sum}</span>
           </td>
         </tr>`;
       })
@@ -350,9 +350,9 @@ export const UiRenderer = (() => {
         <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; background:#e5effa;">
           <img src="./src/assets/brand/gcm-pta-logo.png" style="height:48px; width:auto;" alt="GCM PTA" />
           <div style="text-align:center; flex:1;">
-            <div style="font-size:22px; font-weight:700; color:#184f95;">STOP Observation Summary</div>
-            <div style="font-size:13px; color:#52514e; margin-top:4px;">แผนก: ${escHtml(AppConfig.REPORT_DEPARTMENT_LABEL)}</div>
-            <div style="font-size:13px; color:#52514e;">รายงานประจำเดือน ${escHtml(reportLabel)}</div>
+            <div style="font-size:24px; font-weight:700; color:#184f95;">STOP Observation Summary</div>
+            <div style="font-size:14px; color:#52514e; margin-top:4px;">แผนก: ${escHtml(AppConfig.REPORT_DEPARTMENT_LABEL)}</div>
+            <div style="font-size:14px; color:#52514e;">รายงานประจำเดือน ${escHtml(reportLabel)}</div>
           </div>
           <img src="./src/assets/brand/lotus-stop-icon.png" style="height:56px; width:auto; border-radius:6px;" alt="Lotus Notes STOP Observation" />
         </div>
@@ -362,7 +362,7 @@ export const UiRenderer = (() => {
           <div style="flex:0.385; background:#3D4EA3;"></div>
         </div>
         <div style="padding:20px 24px;">
-          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px;">
             <thead>
               <tr style="background:#2a78d6;">
                 <th style="padding:8px; border:1px solid #1c5cab; color:#ffffff;">Section</th>
@@ -374,7 +374,7 @@ export const UiRenderer = (() => {
             </thead>
             <tbody>${rows}</tbody>
           </table>
-          <div style="text-align:center; margin-top:16px; font-size:11px; color:#94a3b8;">
+          <div style="text-align:center; margin-top:16px; font-size:12px; color:#94a3b8;">
             สร้างเมื่อ ${escHtml(new Date().toLocaleString('th-TH'))} · A-Class WebCraft · by Supasit.A
           </div>
         </div>
@@ -397,7 +397,7 @@ export const UiRenderer = (() => {
 
   async function captureEmailBannerImage(container) {
     await _loadHtml2Canvas();
-    const canvas = await window.html2canvas(container.firstElementChild, { backgroundColor: '#ffffff', scale: 2 });
+    const canvas = await window.html2canvas(container.firstElementChild, { backgroundColor: '#ffffff', scale: 3 });
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('สร้างรูปภาพไม่สำเร็จ'))), 'image/png');
     });
