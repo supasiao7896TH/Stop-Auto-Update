@@ -107,18 +107,37 @@ export const UiRenderer = (() => {
       .join('');
   }
 
+  // ---- Section colors (shared by sidebar, main table, email banner) ----
+
+  function _isDarkMode() {
+    return document.documentElement.classList.contains('dark');
+  }
+
+  // สีตายตัวต่อแผนกตามลำดับ section.order — ไม่ผูกกับลำดับที่ filter/แสดงผล เพื่อให้
+  // แผนกเดิมได้สีเดิมเสมอ (categorical color ต้องผูกกับ entity ไม่ใช่ตำแหน่งที่ render)
+  // forceLight: ใช้ตอน render รูปสรุปอีเมล ซึ่งพื้นเป็นสีขาวตายตัวเสมอ ไม่ตามธีมแอป
+  function _sectionColorMap(sections, forceLight = false) {
+    const isDark = !forceLight && _isDarkMode();
+    const palette = isDark ? AppConfig.SECTION_COLOR_PALETTE_DARK : AppConfig.SECTION_COLOR_PALETTE;
+    const sorted = sections.slice().sort((a, b) => a.order - b.order);
+    return new Map(sorted.map((s, i) => [s.id, palette[i % palette.length]]));
+  }
+
   // ---- Sidebar ----
 
   function renderSectionsSidebar(sections, activeSectionId) {
     const container = $('sectionListContainer');
     if (!container) return;
+    const sectionColorById = _sectionColorMap(sections);
     const allClass = !activeSectionId ? 'bg-white/60 dark:bg-white/10 font-semibold' : 'hover:bg-white/40 dark:hover:bg-white/5';
     let html = `<button data-section-id="" class="section-nav-item w-full text-left px-3 py-2 rounded-lg text-sm ${allClass}">ทั้งหมด</button>`;
     html += sections
       .map((s) => {
         const active = s.id === activeSectionId;
         const cls = active ? 'bg-white/60 dark:bg-white/10 font-semibold' : 'hover:bg-white/40 dark:hover:bg-white/5';
-        return `<button data-section-id="${s.id}" class="section-nav-item w-full text-left px-3 py-2 rounded-lg text-sm ${cls}">${escHtml(s.name)}</button>`;
+        const color = sectionColorById.get(s.id);
+        const dot = `<span style="display:inline-block; width:8px; height:8px; border-radius:999px; background:${color.text}; margin-right:8px; flex-shrink:0;"></span>`;
+        return `<button data-section-id="${s.id}" class="section-nav-item w-full text-left px-3 py-2 rounded-lg text-sm ${cls} flex items-center">${dot}${escHtml(s.name)}</button>`;
       })
       .join('');
     container.innerHTML = html;
@@ -136,6 +155,8 @@ export const UiRenderer = (() => {
     if (!tbody) return;
 
     const sectionNameById = new Map(sections.map((s) => [s.id, s.name]));
+    const sectionColorById = _sectionColorMap(sections);
+    const neutralBadge = _isDarkMode() ? { bg: '#2c2c2a', text: '#c3c2b7' } : { bg: '#f1f5f9', text: '#64748b' };
     let visible = employees.filter((e) => !filterSectionId || e.sectionId === filterSectionId);
     // เรียงตาม No. ตรงตามลำดับในไฟล์ Excel ต้นฉบับ (ไม่จัดกลุ่มตามชื่อแผนกแล้ว
     // เพราะไฟล์ต้นฉบับไม่ได้เรียงแผนกตามตัวอักษร)
@@ -156,9 +177,11 @@ export const UiRenderer = (() => {
           </td>`;
         }).join('');
         const sum = AppConfig.MONTH_NAMES.reduce((acc, _, i) => acc + (_monthCount(taskEntries, emp.id, filterYear, i + 1) || 0), 0);
+        const sectionColor = sectionColorById.get(emp.sectionId) || neutralBadge;
+        const sectionBadge = `<span style="display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; background:${sectionColor.bg}; color:${sectionColor.text};">${escHtml(sectionNameById.get(emp.sectionId) || '-')}</span>`;
 
         return `<tr class="border-b border-slate-100 dark:border-white/5">
-          <td class="px-3 py-2 text-slate-500">${escHtml(sectionNameById.get(emp.sectionId) || '-')}</td>
+          <td class="px-3 py-2">${sectionBadge}</td>
           <td class="px-3 py-2 text-slate-500">${emp.no}</td>
           <td class="px-3 py-2 font-medium">${escHtml(fullName(emp))}</td>
           ${monthCells}
@@ -288,12 +311,8 @@ export const UiRenderer = (() => {
     if (!container) return;
 
     const sectionNameById = new Map(sections.map((s) => [s.id, s.name]));
-    // สีตายตัวต่อแผนกตามลำดับ section.order — ไม่ผูกกับลำดับที่ filter/แสดงผล
-    // เพื่อให้แผนกเดิมได้สีเดิมเสมอไม่ว่าจะ render กี่รอบ (categorical color ต้องผูกกับ entity)
-    const sortedSections = sections.slice().sort((a, b) => a.order - b.order);
-    const sectionColorById = new Map(
-      sortedSections.map((s, i) => [s.id, AppConfig.SECTION_COLOR_PALETTE[i % AppConfig.SECTION_COLOR_PALETTE.length]])
-    );
+    // forceLight: banner เป็นพื้นขาวตายตัวเสมอ ไม่ตามธีม dark/light ของแอป
+    const sectionColorById = _sectionColorMap(sections, true);
     const neutralBadge = { bg: '#f1f5f9', text: '#64748b' };
 
     const latestMonth = _latestMonthWithData(taskEntries, year);

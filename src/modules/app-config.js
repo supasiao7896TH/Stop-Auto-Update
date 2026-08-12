@@ -45,6 +45,18 @@ export const AppConfig = (() => {
       { bg: '#E9E7F4', text: '#30266D' }, // violet
       { bg: '#FCE9E9', text: '#942F2F' }, // red
     ],
+    // เฉดเดียวกัน ผสมกับพื้นมืด (#1a1a19) แทนขาว — ใช้คู่กับ SECTION_COLOR_PALETTE
+    // ลำดับ index เดียวกันเสมอ (เลือกชุดไหนตาม dark mode ตอน render เท่านั้น)
+    SECTION_COLOR_PALETTE_DARK: [
+      { bg: '#1D2D3F', text: '#7FAEE6' }, // blue
+      { bg: '#44291E', text: '#F3A485' }, // orange
+      { bg: '#1A382C', text: '#76CFAF' }, // aqua
+      { bg: '#443514', text: '#F4C766' }, // yellow
+      { bg: '#432D35', text: '#F1B0C8' }, // magenta
+      { bg: '#152F14', text: '#66B566' }, // green
+      { bg: '#242035', text: '#9289CA' }, // violet
+      { bg: '#422322', text: '#EE9291' }, // red
+    ],
 
     CURRENT_YEAR: new Date().getFullYear(),
     THEME_STORAGE_KEY: 'stop-auto-update-theme',
