@@ -1,6 +1,6 @@
 {
   "name": "stop-auto-update",
-  "account_id": "TODO_ใส่_account_id_จาก_Cloudflare_dashboard",
+  "account_id": "e87e6b4e7ec59834a35db192e7e37eb8",
   "compatibility_date": "2026-08-12",
   "assets": {
     "directory": "./"
