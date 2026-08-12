@@ -21,6 +21,7 @@ export const AppCore = (() => {
   async function init() {
     try {
       _initTheme();
+      await _seedDefaultDataIfEmpty();
       await _loadAllData();
       UiRenderer.renderMonthHeader();
       _renderAllViews();
@@ -30,6 +31,23 @@ export const AppCore = (() => {
     } catch (err) {
       DebugModule.log('error', 'AppCore.init', err);
       UiRenderer.toast('เริ่มต้นแอปไม่สำเร็จ ลองรีเฟรชหน้าใหม่', 'error');
+    }
+  }
+
+  async function _seedDefaultDataIfEmpty() {
+    const existingEmployees = await StorageEngine.getAll(STORES.EMPLOYEES);
+    if (existingEmployees.length > 0) return; // มีข้อมูลอยู่แล้ว (ของผู้ใช้เอง) ห้ามทับ
+    try {
+      const res = await fetch('./src/assets/seed-data.json');
+      if (!res.ok) return;
+      const data = await res.json();
+      await Promise.all([
+        StorageEngine.bulkPut(STORES.SECTIONS, data.sections),
+        StorageEngine.bulkPut(STORES.EMPLOYEES, data.employees),
+        StorageEngine.bulkPut(STORES.TASK_ENTRIES, data.taskEntries),
+      ]);
+    } catch (err) {
+      DebugModule.log('error', 'AppCore.seedDefaultDataIfEmpty', err);
     }
   }
 

@@ -53,6 +53,12 @@ cryptoKeys:   { name: 'geminiKeyWrap', key }   ← non-extractable AES-GCM Crypt
 
 `storage-engine.js#parseXlsFile()` หาหัวตารางด้วยการค้นเซลล์ `'JAN'` แล้วคำนวณตำแหน่งคอลัมน์ Section/No./ชื่อ/นามสกุล แบบ **relative offset** จากตำแหน่ง JAN (ไม่ hardcode index ตรงๆ) —ยึดตาม layout ของไฟล์ `Observetion PE1 2026..xls` จริง ถ้าพี่ A เปลี่ยน template ไฟล์ ต้องตรวจ layout ใหม่ก่อนแก้
 
+## Default seed data (`src/assets/seed-data.json`)
+
+DB ที่ว่างเปล่า (เบราว์เซอร์/เครื่องใหม่ที่ไม่เคยมีข้อมูล) จะถูก auto-seed ด้วยไฟล์นี้ตอน `AppCore.init()` (`_seedDefaultDataIfEmpty()` ใน `app-core.js`) — เช็คจาก `employees.length > 0` ก่อนเสมอ ถ้ามีข้อมูลอยู่แล้วจะ**ไม่ทับ** จึงปลอดภัยกับผู้ใช้ที่มีข้อมูลของตัวเองอยู่แล้ว มีผลเฉพาะผู้ใช้ใหม่จริงๆ เท่านั้น
+
+**ข้อมูลนี้เป็น static snapshot ไม่อัปเดตเองเมื่อเวลาผ่านไป** (ไม่มี cloud sync) — เมื่อจะรีเฟรชให้เป็นเดือนล่าสุด: กด "Export" จากเบราว์เซอร์ที่มีข้อมูลล่าสุดครบถ้วน → เอาไฟล์ที่ได้มาแทนที่ `src/assets/seed-data.json` (ตัดเดือนที่ยังนับไม่ครบทั้งเดือนออกก่อน อย่าให้มีข้อมูล partial ปนเข้ามา — จะดูเหมือนบางคน "ไม่มี STOP เลย" ทั้งที่ยังไม่ได้นับ) → ตัด key `exportedAt` ทิ้ง → commit → push
+
 ## Email banner (คัดลอกรูปสรุปเข้า clipboard)
 
 ปุ่ม "คัดลอกรูปสำหรับอีเมล" ใช้ `html2canvas` (CDN lazy-load แบบเดียวกับ SheetJS, ดู `AppConfig.HTML2CANVAS_CDN`) แปลง element ที่ render ไว้ใน `#emailBannerContainer` (ซ่อนนอกจอใน `index.html`) เป็นรูป PNG แล้วเขียนเข้า clipboard ด้วย `navigator.clipboard.write()` — ถ้าคัดลอกไม่ได้ (permission/browser ไม่รองรับ) จะ fallback เป็นดาวน์โหลดไฟล์แทนอัตโนมัติ
